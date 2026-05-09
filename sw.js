@@ -1,4 +1,4 @@
-const CACHE_NAME = 'matmon-app-v7';
+const CACHE_NAME = 'matmon-app-v8';
 const urlsToCache = [
   './index.html',
   './manifest.json',
