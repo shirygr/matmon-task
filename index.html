@@ -392,7 +392,15 @@
                 
                 // Show modal with a slight delay for better UX
                 setTimeout(() => {
-                    const modal = document.getElementById('inspiration-modal');
+                    const firebaseConfig = {
+  apiKey: "AIzaSyB8geSwKTWETbYE_mBEu1JECduqQIJy5Lc",
+  authDomain: "matmon-task.firebaseapp.com",
+  projectId: "matmon-task",
+  storageBucket: "matmon-task.firebasestorage.app",
+  messagingSenderId: "158594235258",
+  appId: "1:158594235258:web:e80ca16380f5ada5c374c3",
+  measurementId: "G-HFMKX74LZ0"
+};
                     const content = document.getElementById('inspiration-content');
                     modal.classList.remove('opacity-0', 'pointer-events-none');
                     content.classList.remove('scale-95');
