@@ -28,7 +28,6 @@
                 <h1 class="text-xl font-bold text-gray-800">משפחת מטמון</h1>
             </div>
             <div class="flex items-center gap-4">
-                <!-- חיווי חיבור לענן -->
                 <div id="cloud-status" class="text-sm font-medium text-gray-400 flex items-center gap-1" title="בודק חיבור...">
                     <i class="fa-solid fa-cloud"></i> מנותק
                 </div>
@@ -51,7 +50,6 @@
 
     <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <!-- Today Tasks Section -->
         <div id="view-today" class="hidden space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -74,7 +72,6 @@
             </div>
         </div>
 
-        <!-- Tasks Section -->
         <div id="view-tasks" class="space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 transition-all duration-300">
                 <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2" id="form-title">
@@ -82,12 +79,12 @@
                 </h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div id="parent-assign-container" class="sm:col-span-2 hidden bg-purple-50 p-4 rounded-xl border border-purple-100 mb-2">
-                        <label class="block text-sm font-medium text-purple-800 mb-2"><i class="fa-solid fa-user-plus"></i> שיוך המשימה:</label>
+                        <label class="block text-sm font-medium text-purple-800 mb-2"><i class="fa-solid fa-user-plus"></i> למי המשימה?</label>
                         <div class="flex gap-2">
                             <select id="task-assignee" class="flex-grow border border-purple-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 bg-white">
-                                <option value="me">אלי (ברירת מחדל)</option>
+                                <option value="me">לי (ברירת מחדל)</option>
                             </select>
-                            <input type="text" id="task-new-assignee" placeholder="הקלד שם..." class="flex-grow border border-purple-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 hidden">
+                            <input type="text" id="task-new-assignee" placeholder="הקלד שם חדש..." class="flex-grow border border-purple-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 hidden">
                             <button type="button" id="btn-toggle-new-user" onclick="toggleNewAssignee()" class="bg-purple-200 text-purple-800 px-4 py-2 rounded-xl text-sm hover:bg-purple-300 transition-colors whitespace-nowrap">
                                 <i class="fa-solid fa-plus"></i> חדש
                             </button>
@@ -175,13 +172,42 @@
             </div>
         </div>
 
-        <!-- Timer Section (Hidden to save space, logic intact) -->
         <div id="view-timer" class="hidden space-y-6">
-             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center"><p class="text-gray-500">טיימר</p></div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-stopwatch text-indigo-500"></i> טיימר חכם</h2>
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">כולל (דקות)</label>
+                        <input type="number" id="timer-total" value="20" class="w-full border rounded-xl px-4 py-3 text-center text-xl font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">צלצל כל (דקות)</label>
+                        <input type="number" id="timer-interval" value="5" class="w-full border rounded-xl px-4 py-3 text-center text-xl font-bold">
+                    </div>
+                    <div class="col-span-2 mt-2">
+                        <select id="timer-sound" class="w-full border rounded-xl px-4 py-3 outline-none bg-gray-50 text-gray-700 font-medium">
+                            <option value="classic">צליל קלאסי</option>
+                            <option value="bell">פעמון</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-2xl p-6 text-center border mb-8 relative overflow-hidden">
+                    <div class="text-sm font-medium text-gray-500 mb-1">זמן נותר:</div>
+                    <div id="display-total" class="text-6xl font-black text-gray-800 mb-4 tracking-wider" style="direction: ltr;">00:00</div>
+                    <div class="text-sm font-medium text-indigo-400 mb-1">עד הצלצול הבא:</div>
+                    <div id="display-interval" class="text-3xl font-bold text-indigo-600" style="direction: ltr;">00:00</div>
+                </div>
+                
+                <div class="flex justify-center gap-4">
+                    <button id="btn-timer-start" onclick="startTimer()" class="bg-indigo-600 hover:bg-indigo-700 text-white h-16 w-16 rounded-full flex items-center justify-center text-2xl shadow-md transition-colors"><i class="fa-solid fa-play ml-1"></i></button>
+                    <button id="btn-timer-pause" onclick="pauseTimer()" class="bg-yellow-500 hover:bg-yellow-600 text-white h-16 w-16 rounded-full items-center justify-center text-2xl shadow-md transition-colors hidden"><i class="fa-solid fa-pause"></i></button>
+                    <button onclick="resetTimer()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 h-16 w-16 rounded-full flex items-center justify-center text-2xl transition-colors"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Modals -->
     <div id="custom-modal" class="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm" id="custom-modal-content">
             <h3 class="text-xl font-bold mb-2" id="modal-title">כותרת</h3>
@@ -214,10 +240,15 @@
     </div>
 
     <script>
+        // משתנים גלובליים
         let synth = null, synths = {}, tasks = [], editingTaskId = null;
         let currentUserName = localStorage.getItem('matmon_user_name') || "";
         let parentMode = false;
+        
+        // משתני טיימר
+        let timerTotalSeconds = 0, timerIntervalSeconds = 0, timerObj = null, remainingTotal = 0, remainingInterval = 0;
 
+        // מזהה משתמש קבוע
         window.getUserId = function() {
             if (window.firebaseInitialized && window.firebaseUid) return window.firebaseUid;
             let uid = localStorage.getItem('matmon_local_uid');
@@ -229,15 +260,82 @@
             const now = new Date();
             document.getElementById('task-date').value = now.toISOString().split('T')[0];
             document.getElementById('task-time').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            if (!currentUserName) document.getElementById('user-setup-modal').classList.remove('hidden');
+            
+            if (!currentUserName) {
+                document.getElementById('user-setup-modal').classList.remove('hidden');
+            }
+            
             loadTasks();
-            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") { Notification.requestPermission(); }
-            setInterval(checkReminders, 10000);
+            
+            // בקשת הרשאות התראה מיד בטעינה (משופר)
+            if ("Notification" in window) { 
+                Notification.requestPermission(); 
+            }
+            
+            // בדיקת התראות כל 5 שניות
+            setInterval(checkReminders, 5000);
             setInterval(renderTodayTasks, 60000);
+            
+            // רישום Service Worker להתראות רשת
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Service Worker Registered!', reg);
+                });
+            }
         });
 
-        // AUDIO & UI FUNCTIONS (Kept brief for space)
-        function initAudio() { if (!synth) { synth = new Tone.Synth().toDestination(); Tone.start(); } }
+        // פונקציות סאונד
+        function initAudio() { 
+            if (!synth) { 
+                synth = new Tone.Synth().toDestination(); 
+                synths.classic = synth;
+                synths.bell = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 1.5, sustain: 0, release: 1.5 } }).toDestination();
+                synths.digital = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+                Tone.start(); 
+            } 
+        }
+
+        function playSound(type, isEnd = false, taskTitle = "") {
+            initAudio();
+            const now = Tone.now();
+            
+            if (type === 'speech') {
+                synths.bell.triggerAttackRelease("C5", "8n", now);
+                synths.bell.triggerAttackRelease("E5", "8n", now + 0.2);
+                setTimeout(() => {
+                    const textToSpeak = taskTitle ? `הגיע הזמן למשימה: ${taskTitle}` : "הגיע הזמן למשימה";
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                        utterance.lang = 'he-IL'; 
+                        utterance.rate = 0.9;     
+                        window.speechSynthesis.speak(utterance);
+                    }
+                }, 1000); 
+                return;
+            }
+
+            if (type === 'long5') {
+                for (let i = 0; i < 20; i++) {
+                    synths.digital.triggerAttackRelease("C6", "16n", now + i * 0.25);
+                    synths.digital.triggerAttackRelease("A5", "16n", now + i * 0.25 + 0.125);
+                }
+                return;
+            }
+
+            let activeSynth = synths.classic;
+            if (type === 'bell') activeSynth = synths.bell;
+
+            if (isEnd) {
+                activeSynth.triggerAttackRelease("E5", "8n", now);
+                activeSynth.triggerAttackRelease("C6", "4n", now + 0.4);
+            } else {
+                activeSynth.triggerAttackRelease("C5", "8n", now);
+            }
+        }
+        function testTaskSound() { playSound(document.getElementById('task-sound').value, false, document.getElementById('task-title').value || 'בדיקת קול'); }
+
+        // ניווט וממשק
         function switchTab(tabId) {
             ['today', 'tasks', 'timer'].forEach(id => {
                 document.getElementById(`view-${id}`).classList.add('hidden');
@@ -248,15 +346,21 @@
             if (tabId === 'today') renderTodayTasks();
             if (tabId === 'tasks') renderTasks();
         }
+
         function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])); }
         function showModal(title, text) { document.getElementById('modal-title').textContent = title; document.getElementById('modal-text').textContent = text; document.getElementById('custom-modal').classList.remove('opacity-0', 'pointer-events-none'); }
         function closeModal() { document.getElementById('custom-modal').classList.add('opacity-0', 'pointer-events-none'); }
         function openPinModal() { if (parentMode) { parentMode = false; updateParentUI(); renderTasks(); renderTodayTasks(); return; } document.getElementById('pin-input').value = ''; document.getElementById('pin-modal').classList.remove('opacity-0', 'pointer-events-none'); }
         function closePinModal() { document.getElementById('pin-modal').classList.add('opacity-0', 'pointer-events-none'); }
         
+        // משתמשים ומצב הורה
         function saveUserName() {
             const input = document.getElementById('user-name-input').value.trim();
-            if (input.length < 2) return; currentUserName = escapeHTML(input); localStorage.setItem('matmon_user_name', currentUserName); document.getElementById('user-setup-modal').classList.add('hidden');
+            if (input.length < 2) return; 
+            currentUserName = escapeHTML(input); 
+            localStorage.setItem('matmon_user_name', currentUserName); 
+            document.getElementById('user-setup-modal').classList.add('hidden');
+            if ("Notification" in window) Notification.requestPermission();
             tasks.forEach(t => { if (!t.ownerId) { t.ownerId = window.getUserId(); t.ownerName = currentUserName; if(window.saveTaskToCloud) window.saveTaskToCloud(t); } });
             saveTasks(); renderTasks(); renderTodayTasks();
         }
@@ -280,11 +384,13 @@
         }
 
         function populateUserDropdowns() {
-            const uniqueUsers = new Map(); uniqueUsers.set(window.getUserId(), currentUserName || "אני");
+            const uniqueUsers = new Map(); 
+            uniqueUsers.set(window.getUserId(), currentUserName || "אני");
             tasks.forEach(t => { if (t.ownerId && t.ownerName) uniqueUsers.set(t.ownerId, t.ownerName); });
             const optionsHTML = `<option value="all">כל המשפחה</option>` + Array.from(uniqueUsers).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
-            document.getElementById('task-filter-user').innerHTML = optionsHTML; document.getElementById('today-filter-user').innerHTML = optionsHTML;
-            document.getElementById('task-assignee').innerHTML = `<option value="me">אלי (ברירת מחדל)</option>` + Array.from(uniqueUsers).filter(([id])=>id!==window.getUserId()).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+            document.getElementById('task-filter-user').innerHTML = optionsHTML; 
+            document.getElementById('today-filter-user').innerHTML = optionsHTML;
+            document.getElementById('task-assignee').innerHTML = `<option value="me">לי (ברירת מחדל)</option>` + Array.from(uniqueUsers).filter(([id])=>id!==window.getUserId()).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
         }
 
         function toggleNewAssignee() {
@@ -292,6 +398,7 @@
             if (input.classList.contains('hidden')) { select.classList.add('hidden'); input.classList.remove('hidden'); } else { input.classList.add('hidden'); select.classList.remove('hidden'); input.value = ''; }
         }
 
+        // ניהול משימות
         function loadTasks() { try { tasks = JSON.parse(localStorage.getItem('matmon_tasks')) || []; } catch(e) { tasks = []; } renderTasks(); renderTodayTasks(); }
         function saveTasks() { localStorage.setItem('matmon_tasks', JSON.stringify(tasks)); }
 
@@ -304,10 +411,18 @@
             if (!title || !date || !time) return showModal('שגיאה', 'אנא מלא את כל השדות');
             
             let finalOwnerId = window.getUserId(), finalOwnerName = currentUserName || "משתמש";
+            
+            // לוגיקת השיוך למשתמש אחר
             if (parentMode && !editingTaskId) {
                 const selectEl = document.getElementById('task-assignee'), inputEl = document.getElementById('task-new-assignee');
-                if (!inputEl.classList.contains('hidden') && inputEl.value.trim() !== '') { finalOwnerName = escapeHTML(inputEl.value.trim()); finalOwnerId = 'user_' + Date.now(); } 
-                else if (selectEl.value !== 'me') { finalOwnerId = selectEl.value; finalOwnerName = selectEl.options[selectEl.selectedIndex].text; }
+                if (!inputEl.classList.contains('hidden') && inputEl.value.trim() !== '') { 
+                    finalOwnerName = escapeHTML(inputEl.value.trim()); 
+                    finalOwnerId = 'user_' + Date.now(); 
+                } 
+                else if (selectEl.value !== 'me') { 
+                    finalOwnerId = selectEl.value; 
+                    finalOwnerName = selectEl.options[selectEl.selectedIndex].text; 
+                }
             }
 
             const taskData = {
@@ -318,16 +433,22 @@
                 notified: false, isCompleted: false, ownerId: finalOwnerId, ownerName: finalOwnerName
             };
 
-            if (editingTaskId) { const idx = tasks.findIndex(t => t.id === editingTaskId); if (idx !== -1) tasks[idx] = { ...tasks[idx], ...taskData }; cancelEdit(); } 
-            else { tasks.push(taskData); document.getElementById('task-title').value = ''; }
+            if (editingTaskId) { 
+                const idx = tasks.findIndex(t => t.id === editingTaskId); 
+                if (idx !== -1) tasks[idx] = { ...tasks[idx], ...taskData }; 
+                cancelEdit(); 
+            } else { 
+                tasks.push(taskData); 
+                document.getElementById('task-title').value = ''; 
+            }
             
             saveTasks(); renderTasks(); renderTodayTasks();
-            
-            // שולח לענן אם מחובר!
             if (window.saveTaskToCloud) {
                 const taskToSave = editingTaskId ? tasks.find(t=>t.id===editingTaskId) : taskData;
                 window.saveTaskToCloud(taskToSave);
             }
+            
+            if (parentMode) showModal('מעולה!', `המשימה נשמרה ושויכה ל-${finalOwnerName}.`);
         }
 
         function editTask(id) { const t = tasks.find(x => x.id === id); if (!t) return; document.getElementById('task-title').value = t.title; document.getElementById('task-date').value = t.date; document.getElementById('task-time').value = t.time; document.getElementById('task-reminder').value = t.reminderOffset || "-1"; document.getElementById('task-sound').value = t.sound || "speech"; document.getElementById('task-recurrence').value = t.recurrenceType || "none"; toggleRecurrenceDays(); editingTaskId = id; document.getElementById('btn-save-task').innerHTML = 'שמור שינויים'; document.getElementById('btn-cancel-edit').classList.remove('hidden'); }
@@ -364,16 +485,118 @@
             });
         }
 
-        function checkReminders() {} // Placeholder for brevity
+        // מערכת התראות משופרת למשתמשים ספציפיים
+        function checkReminders() {
+            if (!tasks || tasks.length === 0) return;
+            const now = new Date(); 
+            let stateChanged = false;
+            const myUserId = window.getUserId();
+
+            tasks.forEach(task => {
+                // בדיקה קריטית: ההתראה תצלצל אך ורק אם המשימה שייכת למשתמש הנוכחי!
+                if (task.ownerId !== myUserId || task.notified || task.reminderOffset === '-1' || task.isCompleted) return;
+                
+                const reminderTime = new Date(new Date(`${task.date}T${task.time}`).getTime() - (parseInt(task.reminderOffset) * 60000));
+                
+                if (now >= reminderTime && now <= new Date(`${task.date}T${task.time}`)) {
+                    initAudio(); 
+                    playSound(task.sound || 'speech', false, task.title);
+                    
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        navigator.serviceWorker.ready.then(function(registration) {
+                            registration.showNotification("הגיע הזמן: " + task.title, {
+                                body: `משימה משפחתית לשעה: ${task.time}`,
+                                icon: "./icon-192x192.png",
+                                vibrate: [200, 100, 200, 100, 200, 100, 200],
+                                tag: task.id,
+                                requireInteraction: true
+                            });
+                        });
+                    } else {
+                        showModal('תזכורת!', `הגיע הזמן למשימה:\n${task.title}`);
+                    }
+                    
+                    task.notified = true; 
+                    stateChanged = true;
+                    if (window.saveTaskToCloud) window.saveTaskToCloud(task);
+                }
+            });
+            if (stateChanged) saveTasks();
+        }
+
+        // פונקציות טיימר משוחזרות
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('display-total').textContent = formatTime(remainingTotal);
+            document.getElementById('display-interval').textContent = formatTime(remainingInterval);
+        }
+
+        function startTimer() {
+            if (!timerObj) {
+                if (remainingTotal === 0) {
+                    timerTotalSeconds = parseInt(document.getElementById('timer-total').value) * 60;
+                    timerIntervalSeconds = parseInt(document.getElementById('timer-interval').value) * 60;
+                    if(isNaN(timerTotalSeconds) || isNaN(timerIntervalSeconds)) return showModal("שגיאה", "אנא הזן מספרים תקינים בטיימר");
+                    remainingTotal = timerTotalSeconds;
+                    remainingInterval = timerIntervalSeconds;
+                }
+                document.getElementById('timer-total').disabled = true;
+                document.getElementById('timer-interval').disabled = true;
+                
+                timerObj = setInterval(() => {
+                    remainingTotal--;
+                    remainingInterval--;
+                    updateTimerDisplay();
+
+                    if (remainingInterval <= 0 && remainingTotal > 0) {
+                        playSound(document.getElementById('timer-sound').value);
+                        remainingInterval = timerIntervalSeconds;
+                    }
+                    if (remainingTotal <= 0) {
+                        playSound(document.getElementById('timer-sound').value, true);
+                        pauseTimer();
+                        remainingTotal = 0;
+                        updateTimerDisplay();
+                        document.getElementById('timer-total').disabled = false;
+                        document.getElementById('timer-interval').disabled = false;
+                    }
+                }, 1000);
+                
+                document.getElementById('btn-timer-start').classList.add('hidden');
+                document.getElementById('btn-timer-pause').classList.remove('hidden');
+                document.getElementById('btn-timer-pause').classList.add('flex');
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timerObj);
+            timerObj = null;
+            document.getElementById('btn-timer-pause').classList.add('hidden');
+            document.getElementById('btn-timer-pause').classList.remove('flex');
+            document.getElementById('btn-timer-start').classList.remove('hidden');
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            remainingTotal = 0;
+            remainingInterval = 0;
+            document.getElementById('display-total').textContent = "00:00";
+            document.getElementById('display-interval').textContent = "00:00";
+            document.getElementById('timer-total').disabled = false;
+            document.getElementById('timer-interval').disabled = false;
+        }
     </script>
 
-    <!-- Cloud Sync Connection (עם המפתחות המעודכנים שלך) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // שתלתי לך את המפתחות ששלחת לי ישירות פה!
         const firebaseConfig = {
           apiKey: "AIzaSyB8geSwKTWETbYE_mBEu1JECduqQIJy5Lc",
           authDomain: "matmon-task.firebaseapp.com",
@@ -399,7 +622,7 @@
                 
                 window.firebaseUid = auth.currentUser.uid;
                 window.firebaseInitialized = true;
-                statusEl.innerHTML = '<i class="fa-solid fa-cloud text-green-500"></i> מחובר לענן';
+                statusEl.innerHTML = '<i class="fa-solid fa-cloud text-green-500"></i> מחובר';
                 
                 onSnapshot(collection(db, 'tasks'), (snapshot) => {
                     const loadedTasks = [];
@@ -409,19 +632,12 @@
 
                 window.saveTaskToCloud = async (task) => await setDoc(doc(db, 'tasks', task.id), task);
                 window.deleteTaskFromCloud = async (taskId) => await deleteDoc(doc(db, 'tasks', taskId));
-                
-                // שליחת כל המשימות הקיימות בפעם הראשונה שמתחברים
-                if (tasks && tasks.length > 0) {
-                    tasks.forEach(t => window.saveTaskToCloud(t));
-                }
 
             } catch (e) { 
                 console.error("Firebase error:", e); 
-                statusEl.innerHTML = `<i class="fa-solid fa-cloud-xmark text-red-500" title="שגיאה: ${e.message}"></i> שגיאה בחיבור`;
+                statusEl.innerHTML = `<i class="fa-solid fa-cloud-xmark text-red-500"></i> שגיאה`;
             }
         }
-        
-        // התחלת חיבור
         initFirebase();
     </script>
 </body>
