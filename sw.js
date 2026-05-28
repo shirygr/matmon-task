@@ -1,4 +1,4 @@
-const CACHE_NAME = 'matmon-tasks-v10';
+const CACHE_NAME = 'matmon-tasks-v11';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
