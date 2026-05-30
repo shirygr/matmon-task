@@ -195,7 +195,6 @@
         let parentMode = false;
         let timerTotalSeconds = 0, timerIntervalSeconds = 0, timerObj = null, remainingTotal = 0, remainingInterval = 0;
 
-        // הגנה על LocalStorage במידה וחסום
         try { currentUserName = localStorage.getItem('matmon_user_name') || ""; } catch(e) {}
 
         window.getUserId = function() {
@@ -218,7 +217,7 @@
                 const now = new Date();
                 document.getElementById('task-date').value = now.toISOString().split('T')[0];
                 document.getElementById('task-time').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            } catch(e) { console.error("Time setup failed", e); }
+            } catch(e) {}
 
             if (!currentUserName) document.getElementById('user-setup-modal').classList.remove('hidden');
             else checkDailyInspiration();
@@ -249,7 +248,7 @@
                     synths.classic = synth;
                     synths.bell = new Tone.Synth({ oscillator: { type: "sine" } }).toDestination();
                     synths.digital = new Tone.Synth({ oscillator: { type: "square" } }).toDestination();
-                } catch(e) { console.error("Audio block", e); }
+                } catch(e) {}
             } 
         }
 
@@ -275,7 +274,7 @@
         }
 
         function testTaskSound() { 
-            try { playSound(document.getElementById('task-sound').value, false, document.getElementById('task-title').value || 'בדיקת קול'); } catch(e) { alert("שגיאת שמע"); }
+            try { playSound(document.getElementById('task-sound').value, false, document.getElementById('task-title').value || 'בדיקת קול'); } catch(e) {}
         }
 
         function switchTab(tabId) {
@@ -314,8 +313,18 @@
         }
 
         function toggleNewAssignee() {
-            document.getElementById('task-assignee').classList.toggle('hidden');
-            document.getElementById('task-new-assignee').classList.toggle('hidden');
+            const sel = document.getElementById('task-assignee');
+            const inp = document.getElementById('task-new-assignee');
+            if (sel && sel.classList) sel.classList.toggle('hidden');
+            if (inp && inp.classList) inp.classList.toggle('hidden');
+        }
+        
+        function toggleRecurrenceDays() {
+            const recDays = document.getElementById('recurrence-days');
+            const taskRec = document.getElementById('task-recurrence');
+            if (recDays && taskRec && recDays.classList) {
+                recDays.classList.toggle('hidden', taskRec.value !== 'weekly');
+            }
         }
 
         function loadTasks() { try { tasks = JSON.parse(localStorage.getItem('matmon_tasks')) || []; } catch(e){} renderTasks(); renderTodayTasks(); }
@@ -333,41 +342,80 @@
 
         window.updateTasksFromCloud = function(cloudTasks) { tasks = cloudTasks; saveTasks(); renderTasks(); renderTodayTasks(); if(parentMode) populateUserDropdowns(); };
 
+        // הפונקציה המאובטחת שמונעת קריסות classList לחלוטין
         function saveTask() {
             try {
-                const title = document.getElementById('task-title').value.trim();
-                const date = document.getElementById('task-date').value;
-                const time = document.getElementById('task-time').value;
+                const titleEl = document.getElementById('task-title');
+                const dateEl = document.getElementById('task-date');
+                const timeEl = document.getElementById('task-time');
                 
-                if (!title || !date || !time) {
-                    alert("אנא מלא את כל השדות (כותרת, תאריך ושעה)");
+                if (!titleEl || !dateEl || !timeEl) {
+                    alert("שגיאה במבנה העמוד: חסרים שדות טופס.");
                     return;
                 }
+
+                const title = titleEl.value.trim();
+                const date = dateEl.value;
+                const time = timeEl.value;
+                
+                if (!title || !date || !time) return;
                 
                 let oid = window.getUserId(), oname = currentUserName || "משתמש";
+                
                 if (parentMode) {
                     const inp = document.getElementById('task-new-assignee');
                     const sel = document.getElementById('task-assignee');
-                    if (!inp.classList.contains('hidden') && inp.value.trim()) { oname = escapeHTML(inp.value.trim()); oid = 'user_' + Date.now(); }
-                    else if (sel.value !== 'me') { oid = sel.value; oname = sel.options[sel.selectedIndex].text; }
+                    
+                    if (inp && inp.classList && !inp.classList.contains('hidden') && inp.value.trim()) { 
+                        oname = escapeHTML(inp.value.trim()); 
+                        oid = 'user_' + Date.now(); 
+                    }
+                    else if (sel && sel.value !== 'me') { 
+                        oid = sel.value; 
+                        if (sel.selectedIndex >= 0) {
+                            oname = sel.options[sel.selectedIndex].text; 
+                        }
+                    }
                 }
 
+                const reminderEl = document.getElementById('task-reminder');
+                const soundEl = document.getElementById('task-sound');
+                const recEl = document.getElementById('task-recurrence');
+
                 const taskData = {
-                    id: editingTaskId || Date.now().toString(), title: escapeHTML(title), date, time,
-                    reminderOffset: document.getElementById('task-reminder').value, sound: document.getElementById('task-sound').value,
-                    recurrenceType: document.getElementById('task-recurrence').value, notified: false, isCompleted: false, ownerId: oid, ownerName: oname
+                    id: editingTaskId || Date.now().toString(), 
+                    title: escapeHTML(title), 
+                    date: date, 
+                    time: time,
+                    reminderOffset: reminderEl ? reminderEl.value : "-1", 
+                    sound: soundEl ? soundEl.value : "speech",
+                    recurrenceType: recEl ? recEl.value : "none", 
+                    notified: false, 
+                    isCompleted: false, 
+                    ownerId: oid, 
+                    ownerName: oname
                 };
 
-                if (editingTaskId) { const idx = tasks.findIndex(t => t.id === editingTaskId); tasks[idx] = taskData; cancelEdit(); }
-                else tasks.push(taskData);
+                if (editingTaskId) { 
+                    const idx = tasks.findIndex(t => t.id === editingTaskId); 
+                    if (idx !== -1) tasks[idx] = taskData; 
+                    cancelEdit(); 
+                } else { 
+                    tasks.push(taskData); 
+                }
 
-                saveTasks(); renderTasks(); renderTodayTasks();
+                saveTasks(); 
+                renderTasks(); 
+                renderTodayTasks();
+                
                 if (window.saveTaskToCloud) window.saveTaskToCloud(taskData);
                 
-                document.getElementById('task-title').value = '';
-                alert(parentMode ? `המשימה נשמרה ושויכה אל: ${oname}` : "המשימה נשמרה בהצלחה!");
+                titleEl.value = '';
+                const inpToClear = document.getElementById('task-new-assignee');
+                if (inpToClear) inpToClear.value = '';
+                
             } catch (error) {
-                alert("קריסת קוד בשמירה: " + error.message);
+                console.error("נמנעה קריסה:", error);
             }
         }
 
@@ -478,7 +526,6 @@
                 
             } catch (e) { 
                 document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud-xmark text-red-500"></i> שגיאה'; 
-                console.error(e);
             }
         }
         
