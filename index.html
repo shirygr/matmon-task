@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משפחת מטמון - מערכת ניהול</title>
+    <title>משפחת מטמון - ניהול חכם</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -13,34 +13,48 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; }
     </style>
 </head>
-<body>
-    <nav class="bg-white shadow-lg fixed bottom-0 w-full flex justify-around p-4 z-50">
-        <button onclick="showTab('view-tasks')" class="text-blue-600"><i class="fa-solid fa-list-check text-xl"></i></button>
-        <button onclick="showTab('view-timer')" class="text-blue-600"><i class="fa-solid fa-stopwatch text-xl"></i></button>
-        <button onclick="checkAdmin()" class="text-blue-600"><i class="fa-solid fa-user-lock text-xl"></i></button>
+<body class="pb-20">
+
+    <nav class="bg-white shadow-md p-4 flex justify-around sticky top-0 z-50">
+        <button onclick="showTab('view-tasks')" class="text-blue-600 font-bold"><i class="fa-solid fa-list-check"></i> משימות</button>
+        <button onclick="showTab('view-timer')" class="text-blue-600 font-bold"><i class="fa-solid fa-stopwatch"></i> טיימר</button>
+        <button onclick="checkAdmin()" class="text-red-600 font-bold"><i class="fa-solid fa-user-lock"></i> ניהול</button>
     </nav>
 
-    <main class="p-4 max-w-md mx-auto pb-24">
-        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-center mb-6">
-            <p class="text-yellow-800 font-medium italic" id="quote">"הדרך הטובה ביותר לחזות את העתיד היא ליצור אותו"</p>
+    <main class="p-4 max-w-md mx-auto">
+        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center mb-6">
+            <p class="text-yellow-800 font-bold">"גם צעדים קטנים מובילים להצלחות גדולות"</p>
         </div>
 
-        <div id="view-tasks" class="tab-content active">
-            <h2 class="text-xl font-bold mb-4">המשימות שלי</h2>
+        <div id="view-tasks" class="tab-content active space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-lg font-bold mb-4">הוספת משימה חדשה</h2>
+                <input type="text" id="task-title" placeholder="כותרת המשימה..." class="w-full border p-3 rounded-xl mb-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="task-date" class="border p-2 rounded-xl">
+                    <input type="time" id="task-time" class="border p-2 rounded-xl">
+                </div>
+                <select id="task-sound" class="w-full border p-3 rounded-xl mt-3">
+                    <option value="speech">הקראת שם קולית</option>
+                    <option value="bell">פעמון (3 שניות)</option>
+                    <option value="classic">קלאסי (5 שניות)</option>
+                </select>
+                <button id="save-task-btn" class="w-full bg-blue-600 text-white py-4 rounded-xl mt-4 font-bold">שמור משימה</button>
+            </div>
             <div id="tasks-list" class="space-y-3"></div>
         </div>
 
-        <div id="view-timer" class="tab-content">
-            <h2 class="text-xl font-bold mb-4">טיימר משימות</h2>
-            <div class="bg-white p-8 rounded-2xl shadow text-center">
-                <div class="text-5xl font-bold mb-6" id="timer-display">20:00</div>
-                <button onclick="startTimer()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold">הפעל טיימר</button>
-            </div>
+        <div id="view-timer" class="tab-content space-y-4">
+             <div class="bg-white p-8 rounded-2xl shadow-sm border text-center">
+                <h2 class="text-lg font-bold mb-4">טיימר</h2>
+                <div class="text-5xl font-mono mb-6" id="timer-display">20:00</div>
+                <button onclick="startTimer()" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold">התחל טיימר</button>
+             </div>
         </div>
 
-        <div id="view-admin" class="tab-content">
-            <h2 class="text-xl font-bold mb-4 text-red-600">אזור הורים (ניהול)</h2>
-            <div id="admin-tasks" class="space-y-3"></div>
+        <div id="view-admin" class="tab-content space-y-4">
+            <h2 class="text-xl font-bold text-red-600">ניהול הורים</h2>
+            <div id="admin-list" class="space-y-2"></div>
         </div>
     </main>
 
@@ -51,9 +65,9 @@
             document.getElementById(id).classList.add('active');
         }
 
-        // ניהול סיסמת הורים
+        // ניהול הורים
         function checkAdmin() {
-            const pass = prompt("נא להזין סיסמת הורים:");
+            const pass = prompt("נא להזין סיסמת הורים (1234):");
             if (pass === "1234") {
                 showTab('view-admin');
             } else {
@@ -61,34 +75,59 @@
             }
         }
 
-        // טיימר עם התראות
-        function startTimer() {
-            let timeLeft = 1200; // 20 דקות בשניות
-            const display = document.getElementById('timer-display');
+        // לוגיקת שמירה
+        document.getElementById('save-task-btn').onclick = () => {
+            const task = {
+                id: Date.now(),
+                title: document.getElementById('task-title').value,
+                date: document.getElementById('task-date').value,
+                time: document.getElementById('task-time').value,
+                sound: document.getElementById('task-sound').value
+            };
             
-            const interval = setInterval(() => {
-                timeLeft--;
-                display.innerText = Math.floor(timeLeft/60) + ":" + (timeLeft%60).toString().padStart(2, '0');
-                
-                // כל 5 דקות (300 שניות) צלצול
-                if (timeLeft % 300 === 0 && timeLeft > 0) {
-                    playBell();
-                }
-                
-                if (timeLeft <= 0) clearInterval(interval);
+            if(!task.title) return alert("אנא מלא כותרת");
+            
+            let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            
+            alert("המשימה נשמרה!");
+            render();
+        };
+
+        function render() {
+            const list = document.getElementById('tasks-list');
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            list.innerHTML = tasks.map(t => `
+                <div class="bg-white p-4 rounded-xl shadow border flex justify-between items-center">
+                    <div>
+                        <p class="font-bold">${t.title}</p>
+                        <p class="text-xs text-gray-500">${t.date} | ${t.time}</p>
+                    </div>
+                    <button onclick="deleteTask(${t.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+            
+            // עדכון אזור ניהול
+            document.getElementById('admin-list').innerHTML = list.innerHTML;
+        }
+
+        function deleteTask(id) {
+            let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            render();
+        }
+
+        function startTimer() {
+            let sec = 1200;
+            setInterval(() => {
+                sec--;
+                document.getElementById('timer-display').innerText = Math.floor(sec/60) + ":" + (sec%60).toString().padStart(2, '0');
             }, 1000);
         }
 
-        async function playBell() {
-            await Tone.start();
-            const synth = new Tone.Synth().toDestination();
-            synth.triggerAttackRelease("C5", "3n");
-        }
-
-        // דוגמה לנתונים (כאן יתחבר ה-Firebase שלך)
-        const tasks = [{id: 1, title: "סידור החדר", user: "יונתן"}];
-        document.getElementById('tasks-list').innerHTML = tasks.map(t => `<div class="p-4 bg-white rounded-lg shadow">${t.title}</div>`).join('');
-        document.getElementById('admin-tasks').innerHTML = tasks.map(t => `<div class="p-4 bg-white rounded-lg shadow flex justify-between">${t.title} <button class="text-red-500">מחק</button></div>`).join('');
+        render();
     </script>
 </body>
 </html>
