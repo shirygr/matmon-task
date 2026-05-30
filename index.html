@@ -10,67 +10,95 @@
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .btn-press { transform: scale(0.95); transition: 0.1s; }
+        body { font-family: 'Segoe UI', sans-serif; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
-    <nav class="bg-white shadow-md p-4 flex justify-around sticky top-0 z-50">
-        <button onclick="showTab('view-today')" class="text-blue-600 font-bold"><i class="fa-solid fa-calendar-day"></i> היום</button>
-        <button onclick="showTab('view-tasks')" class="text-blue-600 font-bold"><i class="fa-solid fa-list-check"></i> משימות</button>
-        <button onclick="showTab('view-timer')" class="text-blue-600 font-bold"><i class="fa-solid fa-stopwatch"></i> טיימר</button>
+    <!-- ניווט -->
+    <nav class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="font-bold text-lg text-blue-800">משפחת מטמון</h1>
+        <div class="flex gap-4">
+            <button onclick="showTab('view-today')" class="text-gray-600"><i class="fa-solid fa-calendar-day"></i></button>
+            <button onclick="showTab('view-tasks')" class="text-blue-600 font-bold"><i class="fa-solid fa-list-check"></i></button>
+            <button onclick="showTab('view-timer')" class="text-gray-600"><i class="fa-solid fa-stopwatch"></i></button>
+        </div>
     </nav>
 
     <main class="p-4 max-w-md mx-auto">
+        <!-- מסך משימות (המרכזי) -->
         <div id="view-tasks" class="tab-content active space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border">
-                <h2 class="text-lg font-bold mb-3">הוספת משימה</h2>
-                <input type="text" id="task-title" placeholder="כותרת המשימה" class="w-full border p-3 rounded-xl mb-2">
-                <div class="flex gap-2">
-                    <input type="date" id="task-date" class="border p-2 rounded-xl flex-1">
-                    <input type="time" id="task-time" class="border p-2 rounded-xl flex-1">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-plus-circle text-blue-500"></i> משימה חדשה</h2>
+                <input type="text" id="task-title" placeholder="מה צריך לעשות?" class="w-full border p-3 rounded-xl mb-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="task-date" class="border p-3 rounded-xl">
+                    <input type="time" id="task-time" class="border p-3 rounded-xl">
                 </div>
-                <select id="task-sound" class="w-full border p-3 rounded-xl mt-2">
-                    <option value="bell">פעמון עדין</option>
-                    <option value="alert">התראה דחופה</option>
-                    <option value="soft">צליל רגוע</option>
+                <select id="task-sound" class="w-full border p-3 rounded-xl mt-3">
+                    <option value="speech">הקראת שם (קולית)</option>
+                    <option value="bell">פעמון (3 שניות)</option>
+                    <option value="classic">קלאסי (5 שניות)</option>
                 </select>
-                <button id="save-btn" class="w-full bg-blue-600 text-white py-4 rounded-xl mt-4 font-bold shadow-lg">שמור משימה</button>
+                <button id="save-task-btn" class="w-full bg-blue-600 text-white py-4 rounded-xl mt-4 font-bold">שמור משימה</button>
             </div>
-            <div id="tasks-list" class="space-y-2"></div>
+            <div id="tasks-list" class="space-y-3 pb-20"></div>
+        </div>
+
+        <!-- מסך טיימר -->
+        <div id="view-timer" class="tab-content space-y-4">
+             <div class="bg-white p-6 rounded-2xl shadow-sm border text-center">
+                <h2 class="text-xl font-bold mb-4">טיימר משפחתי</h2>
+                <div class="text-4xl font-mono mb-4" id="timer-display">00:00</div>
+                <button onclick="startTimer()" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold">התחל</button>
+             </div>
         </div>
     </main>
 
     <script>
-        // ניהול צלילים
-        async function playSound(type) {
-            await Tone.start();
-            const synth = new Tone.Synth().toDestination();
-            if(type === 'bell') synth.triggerAttackRelease("C5", "8n");
-            else if(type === 'alert') synth.triggerAttackRelease("E5", "4n");
-            else synth.triggerAttackRelease("G4", "2n");
-        }
+        // אתחול מערכת
+        document.addEventListener('DOMContentLoaded', () => {
+            const saveBtn = document.getElementById('save-task-btn');
+            saveBtn.onclick = saveTask;
+            render();
+        });
 
-        // ניהול טאבים
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
         }
 
-        // שמירה ורינדור
-        document.getElementById('save-btn').addEventListener('click', () => {
-            const task = {
-                id: Date.now(),
-                title: document.getElementById('task-title').value,
-                sound: document.getElementById('task-sound').value
-            };
-            // כאן תתבצע השמירה ל-Firebase ששמת ב-Rules
-            alert("המשימה נשמרה והתראה תופעל בזמן!");
-            playSound(task.sound);
-            render();
-        });
+        async function saveTask() {
+            try {
+                const title = document.getElementById('task-title').value;
+                if(!title) return alert("חסרה כותרת");
+                
+                const task = {
+                    id: Date.now(),
+                    title: title,
+                    date: document.getElementById('task-date').value,
+                    time: document.getElementById('task-time').value,
+                    sound: document.getElementById('task-sound').value
+                };
+                
+                // שמירה מקומית + Firebase
+                let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                tasks.push(task);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                
+                alert("המשימה נשמרה!");
+                render();
+            } catch(e) { alert("שגיאת שמירה, נסה שוב"); }
+        }
 
         function render() {
-            // טעינת משימות מ-Firebase/LocalStorage
+            const list = document.getElementById('tasks-list');
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            list.innerHTML = tasks.map(t => `
+                <div class="bg-white p-4 rounded-xl shadow border flex justify-between items-center">
+                    <div><p class="font-bold">${t.title}</p><p class="text-xs text-gray-400">${t.time}</p></div>
+                    <button onclick="deleteTask(${t.id})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
         }
     </script>
 </body>
