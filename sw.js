@@ -1,8 +1,10 @@
-const CACHE_NAME = 'matmon-tasks-v13';
+const CACHE_NAME = 'matmon-tasks-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon-192x192.png',
+  './icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,26 +29,17 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-First Strategy: פותר את בעיית אי-התעדכנות המכשירים
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request);
+    })
   );
 });
 
-// מאזין ללחיצה על התראה ופותח/מביא לקדמת הבמה את האפליקציה
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
@@ -57,7 +50,9 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus();
         }
       }
-      if (clients.openWindow) return clients.openWindow('./');
+      if (clients.openWindow) {
+        return clients.openWindow('./');
+      }
     })
   );
 });
