@@ -17,6 +17,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen pb-24">
 
+    <!-- בר עליון -->
     <header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -38,10 +39,12 @@
     </header>
 
     <main class="max-w-3xl mx-auto px-4 py-6">
+        <!-- השראה יומית -->
         <div class="inspiration-bg rounded-2xl p-4 border border-amber-200 shadow-sm text-center mb-6">
             <p id="top-quote-text" class="text-gray-700 font-medium italic">"גם צעדים קטנים מובילים להצלחות גדולות ✨"</p>
         </div>
 
+        <!-- טאב היום -->
         <div id="view-today" class="hidden space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border p-5">
                 <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-calendar-check text-blue-500"></i> לו"ז להיום</h2>
@@ -49,6 +52,7 @@
             </div>
         </div>
 
+        <!-- טאב משימות (למשתמש הנוכחי בלבד) -->
         <div id="view-tasks" class="space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border p-5">
                 <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-plus text-blue-500"></i> הוספת משימה אישית</h2>
@@ -85,6 +89,7 @@
             </div>
         </div>
 
+        <!-- טאב טיימר חכם -->
         <div id="view-timer" class="hidden space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border p-6">
                 <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-stopwatch text-indigo-500"></i> טיימר משפחתי מחזורי</h2>
@@ -117,6 +122,7 @@
             </div>
         </div>
 
+        <!-- טאב ניהול הורים (מופרד לחלוטין) -->
         <div id="view-admin" class="hidden space-y-6">
             <div class="bg-red-50 rounded-2xl shadow-sm border border-red-100 p-5">
                 <h2 class="text-lg font-semibold text-red-800 mb-4"><i class="fa-solid fa-user-plus"></i> שיוך משימה לבן משפחה</h2>
@@ -164,6 +170,7 @@
         </div>
     </main>
 
+    <!-- מודאל סיסמה -->
     <div id="pin-modal" class="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold text-center mb-2">אימות הורים</h3>
@@ -176,6 +183,7 @@
         </div>
     </div>
 
+    <!-- מודאל התחברות -->
     <div id="user-setup-modal" class="fixed inset-0 bg-gray-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
         <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center">
             <h3 class="text-xl font-bold mb-4">ברוכים הבאים</h3>
@@ -389,4 +397,123 @@
         }
 
         function renderTodayTasks() {
-            const container = document.getElementById('today-tasks-container
+            const container = document.getElementById('today-tasks-container'); container.innerHTML = '';
+            const todayStr = new Date().toISOString().split('T')[0];
+            const toRender = tasks.filter(t => t.date === todayStr && t.ownerId === window.getUserId());
+            if(toRender.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center text-sm py-4">אין לך לו"ז להיום</p>'; return; }
+            toRender.forEach(t => {
+                const div = document.createElement('div'); div.className = "p-3 bg-blue-50/60 rounded-xl border flex justify-between items-center";
+                div.innerHTML = `<div><div class="font-bold text-blue-900">${t.title}</div><div class="text-xs text-blue-600 mt-0.5">${t.time}</div></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function checkReminders() {
+            const now = new Date(); const myId = window.getUserId();
+            tasks.forEach(t => {
+                if (t.ownerId !== myId || t.notified || t.reminderOffset === '-1') return;
+                const taskTime = new Date(`${t.date}T${t.time}`);
+                if (now >= (taskTime - t.reminderOffset * 60000) && now <= taskTime) {
+                    playSound(t.sound, false, t.title);
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification("משפחת מטמון: " + t.title, { body: `זמן: ${t.time}`, requireInteraction: true });
+                        });
+                    }
+                    t.notified = true; saveTasks();
+                    if (window.saveTaskToCloud) window.saveTaskToCloud(t);
+                }
+            });
+        }
+
+        async function startTimer() {
+            if (timerObj) return;
+            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(err){}
+
+            const totalInMinutes = parseInt(document.getElementById('timer-total').value) || 20;
+            const intervalInMinutes = parseInt(document.getElementById('timer-interval').value) || 5;
+
+            if (remainingTotal === 0) {
+                remainingTotal = totalInMinutes * 60;
+                remainingInterval = intervalInMinutes * 60;
+            }
+
+            timerObj = setInterval(() => {
+                remainingTotal--; remainingInterval--;
+                
+                if (remainingTotal < 0) {
+                    playSound('classic', true, 'טיימר הסתיים');
+                    resetTimer(); return;
+                }
+
+                document.getElementById('display-total').textContent = Math.floor(remainingTotal/60).toString().padStart(2,'0') + ":" + (remainingTotal%60).toString().padStart(2,'0');
+                document.getElementById('display-interval').textContent = Math.floor(remainingInterval/60).toString().padStart(2,'0') + ":" + (remainingInterval%60).toString().padStart(2,'0');
+
+                if (remainingInterval <= 0 && remainingTotal > 0) {
+                    playSound('bell', false, 'התראת ביניים');
+                    remainingInterval = intervalInMinutes * 60;
+                }
+            }, 1000);
+
+            document.getElementById('btn-timer-start').classList.add('hidden');
+            document.getElementById('btn-timer-pause').classList.remove('hidden');
+        }
+
+        function pauseTimer() { 
+            clearInterval(timerObj); timerObj = null; 
+            if(wakeLock) { wakeLock.release(); wakeLock = null; }
+            document.getElementById('btn-timer-start').classList.remove('hidden'); 
+            document.getElementById('btn-timer-pause').classList.add('hidden'); 
+        }
+
+        function resetTimer() { 
+            pauseTimer(); remainingTotal = 0; remainingInterval = 0; 
+            document.getElementById('display-total').textContent = "20:00"; 
+            document.getElementById('display-interval').textContent = "05:00"; 
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8geSwKTWETbYE_mBEu1JECduqQIJy5Lc",
+          authDomain: "matmon-task.firebaseapp.com",
+          projectId: "matmon-task",
+          storageBucket: "matmon-task.firebasestorage.app",
+          messagingSenderId: "158594235258",
+          appId: "1:158594235258:web:e80ca16380f5ada5c374c3",
+          measurementId: "G-HFMKX74LZ0"
+        };
+
+        async function initFirebaseSafe() {
+            try {
+                const app = initializeApp(firebaseConfig); 
+                const db = getFirestore(app); 
+                const auth = getAuth(app);
+                
+                await signInAnonymously(auth); 
+                window.firebaseUid = auth.currentUser.uid; 
+                window.firebaseInitialized = true;
+                
+                document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud text-green-500"></i> מחובר';
+                
+                onSnapshot(collection(db, 'tasks'), (snap) => {
+                    const t = []; snap.forEach(d => t.push(d.data())); 
+                    if(window.updateTasksFromCloud) window.updateTasksFromCloud(t);
+                });
+                
+                window.saveTaskToCloud = async (t) => await setDoc(doc(db, 'tasks', t.id), t);
+                window.deleteTaskFromCloud = async (id) => await deleteDoc(doc(db, 'tasks', id));
+                
+            } catch (e) { 
+                document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud-xmark text-red-500"></i> שגיאה'; 
+            }
+        }
+        
+        initFirebaseSafe();
+    </script>
+</body>
+</html>
