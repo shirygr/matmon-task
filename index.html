@@ -3,131 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משפחת מטמון - ניהול חכם</title>
+    <title>משפחת מטמון - מערכת משולבת</title>
+    <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .tab-active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .tab-inactive { border-bottom-color: transparent; color: #6b7280; }
+        .inspiration-bg { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
     </style>
 </head>
-<body class="pb-20">
+<body class="bg-slate-50 min-h-screen pb-24">
 
-    <nav class="bg-white shadow-md p-4 flex justify-around sticky top-0 z-50">
-        <button onclick="showTab('view-tasks')" class="text-blue-600 font-bold"><i class="fa-solid fa-list-check"></i> משימות</button>
-        <button onclick="showTab('view-timer')" class="text-blue-600 font-bold"><i class="fa-solid fa-stopwatch"></i> טיימר</button>
-        <button onclick="checkAdmin()" class="text-red-600 font-bold"><i class="fa-solid fa-user-lock"></i> ניהול</button>
-    </nav>
-
-    <main class="p-4 max-w-md mx-auto">
-        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center mb-6">
-            <p class="text-yellow-800 font-bold">"גם צעדים קטנים מובילים להצלחות גדולות"</p>
-        </div>
-
-        <div id="view-tasks" class="tab-content active space-y-4">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                <h2 class="text-lg font-bold mb-4">הוספת משימה חדשה</h2>
-                <input type="text" id="task-title" placeholder="כותרת המשימה..." class="w-full border p-3 rounded-xl mb-3">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="date" id="task-date" class="border p-2 rounded-xl">
-                    <input type="time" id="task-time" class="border p-2 rounded-xl">
-                </div>
-                <select id="task-sound" class="w-full border p-3 rounded-xl mt-3">
-                    <option value="speech">הקראת שם קולית</option>
-                    <option value="bell">פעמון (3 שניות)</option>
-                    <option value="classic">קלאסי (5 שניות)</option>
-                </select>
-                <button id="save-task-btn" class="w-full bg-blue-600 text-white py-4 rounded-xl mt-4 font-bold">שמור משימה</button>
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-xl"><i class="fa-solid fa-house-chimney text-lg"></i></div>
+                <h1 class="text-xl font-bold text-gray-800">משפחת מטמון</h1>
             </div>
-            <div id="tasks-list" class="space-y-3"></div>
+            <div id="cloud-status" class="text-sm font-medium text-gray-400 flex items-center gap-1">
+                <i class="fa-solid fa-cloud"></i> מנותק
+            </div>
+        </div>
+        <div class="max-w-3xl mx-auto px-4 border-t border-gray-100 bg-white">
+            <nav class="flex gap-6 h-12">
+                <button onclick="switchTab('today')" id="tab-btn-today" class="tab-inactive font-medium h-full px-2 border-b-2 flex items-center gap-2"><i class="fa-solid fa-calendar-day"></i> היום</button>
+                <button onclick="switchTab('tasks')" id="tab-btn-tasks" class="tab-active font-medium h-full px-2 border-b-2 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> משימות</button>
+                <button onclick="switchTab('timer')" id="tab-btn-timer" class="tab-inactive font-medium h-full px-2 border-b-2 flex items-center gap-2"><i class="fa-solid fa-stopwatch"></i> טיימר</button>
+                <button onclick="openPinModal()" id="tab-btn-admin" class="tab-inactive font-medium h-full px-2 border-b-2 flex items-center gap-2 text-purple-600"><i class="fa-solid fa-lock"></i> הורים</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        <div class="inspiration-bg rounded-2xl p-4 border border-amber-200 shadow-sm text-center mb-6">
+            <p id="top-quote-text" class="text-gray-700 font-medium italic">"גם צעדים קטנים מובילים להצלحات גדולות ✨"</p>
         </div>
 
-        <div id="view-timer" class="tab-content space-y-4">
-             <div class="bg-white p-8 rounded-2xl shadow-sm border text-center">
-                <h2 class="text-lg font-bold mb-4">טיימר</h2>
-                <div class="text-5xl font-mono mb-6" id="timer-display">20:00</div>
-                <button onclick="startTimer()" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold">התחל טיימר</button>
-             </div>
+        <div id="view-today" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border p-5">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-calendar-check text-blue-500"></i> לו"ז להיום</h2>
+                <div id="today-tasks-container" class="space-y-3"></div>
+            </div>
         </div>
 
-        <div id="view-admin" class="tab-content space-y-4">
-            <h2 class="text-xl font-bold text-red-600">ניהול הורים</h2>
-            <div id="admin-list" class="space-y-2"></div>
+        <div id="view-tasks" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border p-5">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4" id="form-title"><i class="fa-solid fa-plus text-blue-500"></i> משימה חדשה</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div id="parent-assign-container" class="sm:col-span-2 hidden bg-purple-50 p-4 rounded-xl border">
+                        <label class="block text-sm font-medium text-purple-800 mb-2">למי המשיוך?</label>
+                        <div class="flex gap-2">
+                            <select id="task-assignee" class="flex-grow border rounded-xl px-4 py-2 bg-white"><option value="me">לי</option></select>
+                            <input type="text" id="task-new-assignee" placeholder="שם חדש..." class="flex-grow border rounded-xl px-4 py-2 hidden">
+                            <button type="button" onclick="toggleNewAssignee()" class="bg-purple-200 text-purple-800 px-4 py-2 rounded-xl text-sm">חדש</button>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <input type="text" id="task-title" placeholder="כותרת המשימה..." class="w-full border rounded-xl px-4 py-2.5 outline-none">
+                    </div>
+                    <div><input type="date" id="task-date" class="w-full border rounded-xl px-4 py-2.5 outline-none"></div>
+                    <div><input type="time" id="task-time" class="w-full border rounded-xl px-4 py-2.5 outline-none"></div>
+                    <div>
+                        <select id="task-reminder" class="w-full border rounded-xl px-4 py-2.5 bg-white">
+                            <option value="-1">ללא תזכורת</option>
+                            <option value="0">בזמן המשימה</option>
+                            <option value="5">5 דקות לפני</option>
+                            <option value="15">15 דקות לפני</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="task-sound" class="w-full border rounded-xl px-4 py-2.5 bg-white">
+                            <option value="speech">הקראת שם קולית</option>
+                            <option value="classic">מנגינה קלאסית (5 שניות)</option>
+                            <option value="bell">פעמון (3 שניות)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="task-recurrence" onchange="toggleRecurrenceDays()" class="w-full border rounded-xl px-4 py-2.5 bg-white">
+                            <option value="none">חד פעמי</option>
+                            <option value="daily">כל יום</option>
+                            <option value="weekly">בימים נבחרים</option>
+                        </select>
+                    </div>
+                    <div id="recurrence-days" class="sm:col-span-2 hidden bg-gray-50 p-3 rounded-xl border">
+                        <div class="flex flex-wrap gap-2">
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="0" class="recurrence-day"> א'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="1" class="recurrence-day"> ב'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="2" class="recurrence-day"> ג'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="3" class="recurrence-day"> ד'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="4" class="recurrence-day"> ה'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="5" class="recurrence-day"> ו'</label>
+                            <label class="inline-flex items-center gap-1"><input type="checkbox" value="6" class="recurrence-day"> ש'</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 flex gap-3">
+                    <button id="btn-save-task" onclick="saveTask()" class="flex-grow bg-blue-600 text-white px-4 py-2.5 rounded-xl font-medium">שמור משימה</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border p-5">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">רשימת משימות פתוחות</h2>
+                <div id="tasks-container" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="view-timer" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border p-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4"><i class="fa-solid fa-stopwatch text-indigo-500"></i> טיימר משפחתי מחזורי</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">זמן כולל (בדקות)</label>
+                        <input type="number" id="timer-total" value="20" class="w-full border rounded-xl p-3 text-center font-bold text-xl">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">התראת ביניים (כל X דקות)</label>
+                        <input type="number" id="timer-interval" value="5" class="w-full border rounded-xl p-3 text-center font-bold text-xl">
+                    </div>
+                </div>
+                <div class="bg-slate-900 text-white rounded-2xl p-6 text-center mb-6">
+                    <div id="display-total" class="text-6xl font-mono tracking-wider mb-1">20:00</div>
+                    <div class="text-xs text-slate-400">זמן נותר כולל</div>
+                    <div id="display-interval" class="text-2xl font-mono text-indigo-400 mt-4">05:00</div>
+                    <div class="text-xs text-slate-500">עד להתראת הביניים הבאה</div>
+                </div>
+                <div class="flex justify-center gap-4">
+                    <button id="btn-timer-start" onclick="startTimer()" class="bg-indigo-600 text-white h-14 w-14 rounded-full flex items-center justify-center shadow-md"><i class="fa-solid fa-play"></i></button>
+                    <button id="btn-timer-pause" onclick="pauseTimer()" class="bg-yellow-500 text-white h-14 w-14 rounded-full flex items-center justify-center shadow-md hidden"><i class="fa-solid fa-pause"></i></button>
+                    <button onclick="resetTimer()" class="bg-gray-200 text-gray-700 h-14 w-14 rounded-full flex items-center justify-center shadow-md"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 rounded-2xl p-5 border border-amber-200">
+                <h3 class="font-bold text-amber-900 mb-2 flex items-center gap-2"><i class="fa-solid fa-mobile-screen"></i> הגדרת עבודה יציבה ברקע (נייד)</h3>
+                <p class="text-sm text-amber-800 leading-relaxed mb-3">
+                    כדי שההתראות והצלצולים יפעלו בזמן אמת כשהאפליקציה ברקע או כשהמסך כבוי, בצעו הגדרה חד-פעמית במכשיר:
+                </p>
+                <ul class="text-xs text-amber-900 list-disc list-inside space-y-1">
+                    <li><strong>באנדרואיד:</strong> לחצו לחיצה ארוכה על סמל האפליקציה במסך הבית > פרטי אפליקציה > סוללה > שנו ל-"ללא הגבלה" (Unrestricted).</li>
+                    <li><strong>באייפון (iOS):</strong> ודאו ש-"רענון אפליקציות ברקע" מאושר בהגדרות המכשיר תחת דפדפן המקור (Safari/Chrome).</li>
+                </ul>
+            </div>
         </div>
     </main>
 
+    <div id="pin-modal" class="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-center mb-2">אימות הורים</h3>
+            <input type="password" id="pin-input" class="w-full border rounded-xl px-4 py-3 mb-4 text-center text-xl tracking-widest font-mono">
+            <div class="flex gap-3">
+                <button onclick="submitPin()" class="flex-grow bg-purple-600 text-white py-2.5 rounded-xl font-bold">כניסה</button>
+                <button onclick="closePinModal()" class="bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-setup-modal" class="fixed inset-0 bg-gray-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center">
+            <h3 class="text-xl font-bold mb-4">ברוכים הבאים למשפחת מטמון</h3>
+            <input type="text" id="user-name-input" placeholder="השם שלך (למשל: יונתן)" class="w-full px-4 py-3 bg-gray-50 border rounded-xl mb-4 text-right">
+            <button onclick="saveUserName()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md">כניסה למערכת</button>
+        </div>
+    </div>
+
     <script>
-        // ניהול טאבים
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        const inspirationQuotes = [
+            "כל יום הוא הרפתקה חדשה שמחכה רק לך.", "החיוך שלך עושה את העולם יפה יותר.",
+            "את/ה יכול/ה לעשות דברים מדהימים היום!", "לטעות זה בסדר, ככה אנחנו לומדים וגדלים.",
+            "אין עוד אף אחד בעולם בדיוק כמוך, וזה הכוח שלך.", "כשאנחנו יחד, שום דבר לא יכול לעצור אותנו."
+        ];
 
-        // ניהול הורים
-        function checkAdmin() {
-            const pass = prompt("נא להזין סיסמת הורים (1234):");
-            if (pass === "1234") {
-                showTab('view-admin');
-            } else {
-                alert("סיסמה שגויה");
-            }
-        }
+        let synth = null, synths = {}, tasks = [], editingTaskId = null;
+        let currentUserName = localStorage.getItem('matmon_user_name') || "";
+        let parentMode = false;
+        let timerObj = null, remainingTotal = 0, remainingInterval = 0, wakeLock = null;
 
-        // לוגיקת שמירה
-        document.getElementById('save-task-btn').onclick = () => {
-            const task = {
-                id: Date.now(),
-                title: document.getElementById('task-title').value,
-                date: document.getElementById('task-date').value,
-                time: document.getElementById('task-time').value,
-                sound: document.getElementById('task-sound').value
-            };
-            
-            if(!task.title) return alert("אנא מלא כותרת");
-            
-            let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            tasks.push(task);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            
-            alert("המשימה נשמרה!");
-            render();
+        window.getUserId = function() {
+            let uid = localStorage.getItem('matmon_local_uid') || 'local_' + Date.now();
+            localStorage.setItem('matmon_local_uid', uid);
+            return uid;
         };
 
-        function render() {
-            const list = document.getElementById('tasks-list');
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            list.innerHTML = tasks.map(t => `
-                <div class="bg-white p-4 rounded-xl shadow border flex justify-between items-center">
-                    <div>
-                        <p class="font-bold">${t.title}</p>
-                        <p class="text-xs text-gray-500">${t.date} | ${t.time}</p>
-                    </div>
-                    <button onclick="deleteTask(${t.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
+        function escapeHTML(str) { return (str || '').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag])); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            document.getElementById('task-date').value = now.toISOString().split('T')[0];
+            document.getElementById('task-time').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            // קביעת משפט אקראי קבוע להיום
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+            document.getElementById('top-quote-text').textContent = inspirationQuotes[dayOfYear % inspirationQuotes.length];
+
+            if (!currentUserName) document.getElementById('user-setup-modal').classList.remove('hidden');
+            loadTasks();
             
-            // עדכון אזור ניהול
-            document.getElementById('admin-list').innerHTML = list.innerHTML;
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+            setInterval(checkReminders, 4000); 
+        });
+
+        function initAudio() { 
+            if (!synth) { 
+                try {
+                    synth = new Tone.Synth().toDestination(); 
+                    synths.classic = synth;
+                    synths.bell = new Tone.Synth({ oscillator: { type: "sine" } }).toDestination();
+                } catch(e){}
+            } 
         }
 
-        function deleteTask(id) {
-            let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            tasks = tasks.filter(t => t.id !== id);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            render();
+        function playSound(type, isEnd = false, taskTitle = "") {
+            try {
+                initAudio(); Tone.start(); const now = Tone.now();
+                if (type === 'speech' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance("הגיע הזמן: " + taskTitle);
+                    u.lang = 'he-IL'; window.speechSynthesis.speak(u);
+                    return;
+                }
+                if (type === 'classic') {
+                    for (let i = 0; i < 15; i++) synths.classic.triggerAttackRelease("C6", "16n", now + i * 0.3);
+                    return;
+                }
+                synths.bell.triggerAttackRelease("E5", "2n", now);
+            } catch(e) {}
         }
 
-        function startTimer() {
-            let sec = 1200;
-            setInterval(() => {
-                sec--;
-                document.getElementById('timer-display').innerText = Math.floor(sec/60) + ":" + (sec%60).toString().padStart(2, '0');
+        function switchTab(tabId) {
+            ['today', 'tasks', 'timer'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${id}`).className = 'tab-inactive font-medium h-full px-2 border-b-2 flex items-center gap-2';
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabId}`).className = 'tab-active font-medium h-full px-2 border-b-2 flex items-center gap-2';
+        }
+
+        function openPinModal() {
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-modal').classList.remove('opacity-0', 'pointer-events-none');
+        }
+        function closePinModal() { document.getElementById('pin-modal').classList.add('opacity-0', 'pointer-events-none'); }
+        function submitPin() { 
+            if (document.getElementById('pin-input').value === "1234") { 
+                parentMode = true; 
+                closePinModal(); 
+                document.getElementById('parent-assign-container').classList.remove('hidden');
+                document.getElementById('tab-btn-admin').innerHTML = '<i class="fa-solid fa-lock-open"></i> מנהל';
+                populateUserDropdowns();
+                renderTasks();
+            } else { alert("סיסמה שגויה!"); }
+        }
+
+        function populateUserDropdowns() {
+            const users = new Map(); users.set(window.getUserId(), currentUserName || "אני");
+            tasks.forEach(t => { if (t.ownerId) users.set(t.ownerId, t.ownerName); });
+            document.getElementById('task-assignee').innerHTML = `<option value="me">לי</option>` + Array.from(users).filter(([id])=>id!==window.getUserId()).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+        }
+
+        function toggleNewAssignee() {
+            document.getElementById('task-assignee').classList.toggle('hidden');
+            document.getElementById('task-new-assignee').classList.toggle('hidden');
+        }
+
+        function toggleRecurrenceDays() {
+            document.getElementById('recurrence-days').classList.toggle('hidden', document.getElementById('task-recurrence').value !== 'weekly');
+        }
+
+        function loadTasks() { try { tasks = JSON.parse(localStorage.getItem('matmon_tasks')) || []; } catch(e){} renderTasks(); renderTodayTasks(); }
+        function saveTasks() { try { localStorage.setItem('matmon_tasks', JSON.stringify(tasks)); } catch(e){} }
+        
+        function saveUserName() {
+            const input = document.getElementById('user-name-input').value.trim();
+            if (input.length < 2) return; currentUserName = escapeHTML(input); 
+            localStorage.setItem('matmon_user_name', currentUserName);
+            document.getElementById('user-setup-modal').classList.add('hidden');
+            if ("Notification" in window) Notification.requestPermission();
+            renderTasks(); renderTodayTasks();
+        }
+
+        window.updateTasksFromCloud = function(cloudTasks) { tasks = cloudTasks; saveTasks(); renderTasks(); renderTodayTasks(); };
+
+        function saveTask() {
+            try {
+                const title = document.getElementById('task-title').value.trim();
+                const date = document.getElementById('task-date').value;
+                const time = document.getElementById('task-time').value;
+                if (!title || !date || !time) return alert("נא למלא שדות חובה.");
+
+                let oid = window.getUserId(), oname = currentUserName || "משתמש";
+                if (parentMode) {
+                    const inp = document.getElementById('task-new-assignee');
+                    const sel = document.getElementById('task-assignee');
+                    if (!inp.classList.contains('hidden') && inp.value.trim()) { oname = escapeHTML(inp.value.trim()); oid = 'user_' + Date.now(); }
+                    else if (sel.value !== 'me') { oid = sel.value; oname = sel.options[sel.selectedIndex].text; }
+                }
+
+                const taskData = {
+                    id: Date.now().toString(), title: escapeHTML(title), date, time,
+                    reminderOffset: document.getElementById('task-reminder').value, sound: document.getElementById('task-sound').value,
+                    recurrenceType: document.getElementById('task-recurrence').value, notified: false, isCompleted: false, ownerId: oid, ownerName: oname
+                };
+
+                tasks.push(taskData); saveTasks(); renderTasks(); renderTodayTasks();
+                if (window.saveTaskToCloud) window.saveTaskToCloud(taskData);
+                document.getElementById('task-title').value = '';
+                alert("המשימה נשמרה!");
+            } catch (e) { alert("שגיאה בשמירה"); }
+        }
+
+        function deleteTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); if(window.deleteTaskFromCloud) window.deleteTaskFromCloud(id); renderTasks(); renderTodayTasks(); }
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-container'); container.innerHTML = '';
+            const toRender = tasks.filter(t => parentMode ? true : t.ownerId === window.getUserId());
+            if(toRender.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center text-sm py-4">אין משימות פתוחות</p>'; return; }
+            toRender.forEach(t => {
+                const div = document.createElement('div'); div.className = "p-4 bg-white border rounded-xl flex justify-between items-center shadow-sm";
+                div.innerHTML = `<div><div class="font-bold">${t.title} <span class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full mr-2">${t.ownerName}</span></div><div class="text-xs text-gray-400 mt-1">${t.date} | ${t.time}</div></div>
+                <button onclick="deleteTask('${t.id}')" class="text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function renderTodayTasks() {
+            const container = document.getElementById('today-tasks-container'); container.innerHTML = '';
+            const todayStr = new Date().toISOString().split('T')[0];
+            const toRender = tasks.filter(t => t.date === todayStr && (parentMode ? true : t.ownerId === window.getUserId()));
+            if(toRender.length === 0) { container.innerHTML = '<p class="text-gray-400 text-center text-sm py-4">אין לו"ז להיום</p>'; return; }
+            toRender.forEach(t => {
+                const div = document.createElement('div'); div.className = "p-3 bg-blue-50/60 rounded-xl border flex justify-between items-center";
+                div.innerHTML = `<div><div class="font-bold text-blue-900">${t.title}</div><div class="text-xs text-blue-600 mt-0.5">${t.time}</div></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function checkReminders() {
+            const now = new Date(); const myId = window.getUserId();
+            tasks.forEach(t => {
+                if (t.ownerId !== myId || t.notified || t.reminderOffset === '-1') return;
+                const taskTime = new Date(`${t.date}T${t.time}`);
+                if (now >= (taskTime - t.reminderOffset * 60000) && now <= taskTime) {
+                    playSound(t.sound, false, t.title);
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification("משפחת מטמון: " + t.title, { body: `זמן: ${t.time}`, requireInteraction: true });
+                        });
+                    }
+                    t.notified = true; saveTasks();
+                    if (window.saveTaskToCloud) window.saveTaskToCloud(t);
+                }
+            });
+        }
+
+        // לוגיקת טיימר חזרתי משופר ומאובטח
+        async function startTimer() {
+            if (timerObj) return;
+            try {
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+            } catch(err){}
+
+            const totalInMinutes = parseInt(document.getElementById('timer-total').value) || 20;
+            const intervalInMinutes = parseInt(document.getElementById('timer-interval').value) || 5;
+
+            if (remainingTotal === 0) {
+                remainingTotal = totalInMinutes * 60;
+                remainingInterval = intervalInMinutes * 60;
+            }
+
+            timerObj = setInterval(() => {
+                remainingTotal--; remainingInterval--;
+                
+                if (remainingTotal < 0) {
+                    playSound('classic', true, 'טיימר הסתיים');
+                    resetTimer(); return;
+                }
+
+                document.getElementById('display-total').textContent = Math.floor(remainingTotal/60).toString().padStart(2,'0') + ":" + (remainingTotal%60).toString().padStart(2,'0');
+                document.getElementById('display-interval').textContent = Math.floor(remainingInterval/60).toString().padStart(2,'0') + ":" + (remainingInterval%60).toString().padStart(2,'0');
+
+                if (remainingInterval <= 0 && remainingTotal > 0) {
+                    playSound('bell', false, 'התראת ביניים');
+                    remainingInterval = intervalInMinutes * 60;
+                }
             }, 1000);
+
+            document.getElementById('btn-timer-start').classList.add('hidden');
+            document.getElementById('btn-timer-pause').classList.remove('hidden');
         }
 
-        render();
+        function pauseTimer() { 
+            clearInterval(timerObj); timerObj = null; 
+            if(wakeLock) { wakeLock.release(); wakeLock = null; }
+            document.getElementById('btn-timer-start').classList.remove('hidden'); 
+            document.getElementById('btn-timer-pause').classList.add('hidden'); 
+        }
+
+        function resetTimer() { 
+            pauseTimer(); remainingTotal = 0; remainingInterval = 0; 
+            document.getElementById('display-total').textContent = "20:00"; 
+            document.getElementById('display-interval').textContent = "05:00"; 
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyB8geSwKTWETbYE_mBEu1JECduqQIJy5Lc",
+          authDomain: "matmon-task.firebaseapp.com",
+          projectId: "matmon-task",
+          storageBucket: "matmon-task.firebasestorage.app",
+          messagingSenderId: "158594235258",
+          appId: "1:158594235258:web:e80ca16380f5ada5c374c3",
+          measurementId: "G-HFMKX74LZ0"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
+            await signInAnonymously(auth); window.firebaseUid = auth.currentUser.uid; window.firebaseInitialized = true;
+            document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud text-green-500"></i> מחובר';
+            onSnapshot(collection(db, 'tasks'), (snap) => {
+                const t = []; snap.forEach(d => t.push(d.data())); window.updateTasksFromCloud(t);
+            });
+            window.saveTaskToCloud = async (t) => await setDoc(doc(db, 'tasks', t.id), t);
+            window.deleteTaskFromCloud = async (id) => await deleteDoc(doc(db, 'tasks', id));
+        } catch (e) { document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud-xmark text-red-500"></i> שגיאה'; }
     </script>
 </body>
 </html>
